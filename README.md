@@ -27,6 +27,3 @@ O X -
 - X X
 Player 1 won!
 ```
-
-### Filtering
-

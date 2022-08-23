@@ -4,9 +4,9 @@ Environment for play ttt
 import numpy as np
 
 ## REWARDS
-WIN = 1
+WIN = 5
 DRAW = 0.5
-MOVE = -0.1
+MOVE = -0.5
 LOSE = -1
 INVALID = -5
 
@@ -24,7 +24,7 @@ class TicTacToe:
         self.game_over = 0
 
     def get_current_state(self):
-        return self.board
+        return self.board.copy()
 
     def set_next_player(self):
         # alternate between +1 / -1
@@ -54,13 +54,13 @@ class TicTacToe:
         # check if move is INVALID
         if self.board[position] != 0:
             reward = INVALID
-            return reward, self.game_over, self.board,   # no change to board state
+            return reward, self.game_over   # no change to board state
 
         # make move and check if terminated
         self.board[position] = self.current_player
         self.set_next_player()
         reward = self.get_reward()
-        return reward, self.game_over, self.board,
+        return reward, self.game_over
 
     def print_board(self):
         m = {

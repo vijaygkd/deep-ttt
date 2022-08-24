@@ -6,7 +6,7 @@ import numpy as np
 ## REWARDS
 WIN = 5
 DRAW = 0.5
-MOVE = -0.5
+MOVE = -0.1
 LOSE = -1
 INVALID = -5
 
@@ -33,17 +33,19 @@ class TicTacToe:
     def get_reward(self):
         """return reward based on board state after move
         """
-        # check draw
         if 0 not in self.board:
             self.game_over = 1
             return DRAW
-        # check win
+
         for c in self.winning_combo:
             if abs(self.board[c].sum()) == 3:
                 self.game_over = 1
                 return WIN
+            elif (0 in self.board[c]) and (self.board[c].sum() == 2 * self.current_player):
+                # opponent has a winning move in next turn
+                self.game_over = 1
+                return LOSE
 
-        # TODO LOSE reward is never sent to agent ??
         return MOVE
 
     def execute_action(self, position):

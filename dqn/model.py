@@ -1,3 +1,4 @@
+import numpy as np
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras import optimizers
@@ -7,6 +8,7 @@ from tensorflow.keras import metrics, losses
 class DQN:
     def __init__(self, learning_rate=3e-4):
         self.learning_rate = learning_rate
+        self.model = self.get_initial_model()
 
     def get_initial_model(self):
         """
@@ -34,5 +36,10 @@ class DQN:
                 metrics.RootMeanSquaredError(),
                 metrics.MeanAbsoluteError(),
             ])
-
         return model
+
+    def predict(self, input):
+        input_reshaped = input.reshape(1, len(input))
+        q_estimates = self.model.predict(input_reshaped)
+        position = np.argmax(q_estimates)
+        return position, q_estimates

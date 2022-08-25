@@ -60,12 +60,11 @@ class QLearning:
                 state_data = [current_state, action, reward, next_state, is_game_over]
                 self.memory.add_record(state_data)
             # perform gradient decent
-            self.do_gradient_decent(batch_size=32)
-
-
+            self.do_gradient_update(batch_size=32)
+        # end of training
         self.net.save('dqn_net')
 
-    def do_gradient_decent(self, batch_size):
+    def do_gradient_update(self, batch_size):
         mini_batch = self.memory.sample_records(batch_size)
         current_states = mini_batch[0]
         actions = mini_batch[1]

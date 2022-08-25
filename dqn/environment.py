@@ -43,7 +43,7 @@ class TicTacToe:
                 return WIN
             elif (0 in self.board[c]) and (self.board[c].sum() == 2 * self.current_player):
                 # opponent has a winning move in next turn
-                self.game_over = 1
+                self.game_over = 0
                 return LOSE
 
         return MOVE

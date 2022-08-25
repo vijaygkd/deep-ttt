@@ -5,10 +5,11 @@ import numpy as np
 
 
 class QAgent:
-    def __init__(self, q_estimator, epsilon, epsilon_decay):
+    def __init__(self, q_estimator, epsilon=1., epsilon_min=0.1, epsilon_decay_steps=10000):
         self.q_estimator = q_estimator
         self.epsilon = epsilon
-        self.epsilon_decay = epsilon_decay
+        self.epsilon_min = epsilon_min
+        self.epsilon_decay_rate = (epsilon - epsilon_min) / epsilon_decay_steps
 
     def play_next_move(self, board):
         """
@@ -20,7 +21,15 @@ class QAgent:
             move = RandomAgent.play_next_move(board)
         else:
             move, q_estimates = self.q_estimator.predict(board)
+        self.after_move()
         return move, policy
+
+    def after_move(self):
+        """
+        Run after agent makes a move
+        """
+        self.epsilon -= self.epsilon_decay_rate
+        self.epsilon = max(self.epsilon, self.epsilon_min)
 
 
 class RandomAgent:

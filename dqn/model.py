@@ -33,8 +33,6 @@ class DQN:
             optimizer=optimizer,
             metrics=[
                 metrics.MeanSquaredError(),
-                metrics.RootMeanSquaredError(),
-                metrics.MeanAbsoluteError(),
             ])
         return model
 
@@ -43,3 +41,6 @@ class DQN:
         q_estimates = self.model.predict(input_reshaped)
         position = np.argmax(q_estimates)
         return position, q_estimates
+
+    def save(self, path):
+        self.model.save(path)

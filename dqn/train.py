@@ -47,6 +47,7 @@ class QLearning:
     agent = QAgent(net)
 
     def train(self, episodes=100):
+        steps_counter = 0
         for i in range(episodes):
             game = TicTacToe()      # new game
             while game.game_over == 0:
@@ -58,18 +59,24 @@ class QLearning:
                 # store transition
                 state_data = [current_state, action, reward, next_state, is_game_over]
                 self.memory.add_record(state_data)
-                # perform gradient decent
+            # perform gradient decent
+            self.do_gradient_decent(batch_size=32)
+
 
         self.net.save('dqn_net')
 
     def do_gradient_decent(self, batch_size):
-        if len(self.memory) < batch_size:
-            return
+        mini_batch = self.memory.sample_records(batch_size)
+        current_states = mini_batch[0]
+        actions = mini_batch[1]
+        rewards = mini_batch[1]
+        next_states = mini_batch[1]
+        is_terminal_state = mini_batch[1]
 
-        mini_batch = random.sample(self.memory, batch_size)
-
-
-
+        self.net.model.train_on_batch(
+            x=current_states,
+            y=next_states       # todo fix y value
+        )
 
     @staticmethod
     def generate_random_states(n):

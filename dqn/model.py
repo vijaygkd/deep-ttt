@@ -12,12 +12,10 @@ class QOutputLayer(Layer):
 
     def call(self, inputs, indices, training=None):
         if training:
-            print("training")
             indices = tf.cast(indices, tf.int32)
             # return Q value of selection positions / actions
             return tf.gather(inputs, indices, axis=1, batch_dims=1)
         else:
-            print("inference")
             # during inference, return argmax Q. ie. action with higher Q value
             return tf.argmax(inputs, axis=1)
 

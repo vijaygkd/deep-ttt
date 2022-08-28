@@ -20,7 +20,10 @@ class QAgent:
         if policy == 'random':
             move = RandomAgent.play_next_move(board)
         else:
-            move, q_estimates = self.q_estimator.predict(board)
+            dummy = np.array([-1])
+            input_board = board.reshape(1, len(board))
+            move = self.q_estimator.model.predict([input_board, dummy])
+            print(move)
         self.after_move()
         return move, policy
 

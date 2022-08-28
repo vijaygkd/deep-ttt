@@ -68,13 +68,13 @@ class QLearning:
         mini_batch = self.memory.sample_records(batch_size)
         current_states = mini_batch[0]
         actions = mini_batch[1]
-        rewards = mini_batch[1]
-        next_states = mini_batch[1]
-        is_terminal_state = mini_batch[1]
+        rewards = mini_batch[2]
+        next_states = mini_batch[3]
+        is_terminal_state = mini_batch[4]
 
         self.net.model.train_on_batch(
-            x=current_states,
-            y=next_states       # todo fix y value
+            x=[current_states, actions],
+            y=rewards       # todo fix y value
         )
 
     @staticmethod

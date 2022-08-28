@@ -12,9 +12,12 @@ class QOutputLayer(Layer):
 
     def call(self, inputs, indices, training=None):
         if training:
+            print("training")
+            indices = tf.cast(indices, tf.int32)
             # return Q value of selection positions / actions
             return tf.gather(inputs, indices, axis=1, batch_dims=1)
         else:
+            print("inference")
             # during inference, return argmax Q. ie. action with higher Q value
             return tf.argmax(inputs, axis=1)
 
@@ -39,7 +42,7 @@ class DQN:
         # Reduce output to single value
         final_layer = QOutputLayer(name='final_layer')(output_layer, input_actions_layer)
         # Model
-        model = Model(inputs=[input_states_layer, input_actions_layer], outputs=output_layer)
+        model = Model(inputs=[input_states_layer, input_actions_layer], outputs=final_layer)
 
         # Optimizer
         optimizer = optimizers.Adam(learning_rate=self.learning_rate)
@@ -53,11 +56,11 @@ class DQN:
             ])
         return model
 
-    def predict(self, input):
-        input_reshaped = input.reshape(1, len(input))
-        q_estimates = self.model.predict(input_reshaped)
-        position = np.argmax(q_estimates)
-        return position, q_estimates
+    # def predict(self, input):
+    #     input_reshaped = input.reshape(1, len(input))
+    #     q_estimates = self.model.predict(input_reshaped)
+    #     position = np.argmax(q_estimates)
+    #     return position, q_estimates
 
     def save(self, path):
         self.model.save(path)

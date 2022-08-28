@@ -3,6 +3,7 @@ Train DQN network for learning TTT by using re-inforcement learning
 """
 import random
 import numpy as np
+from tqdm import tqdm
 
 from dqn.environment import TicTacToe
 from dqn.agent import RandomAgent, QAgent
@@ -14,9 +15,10 @@ class Memory:
         self.size = size
         self.current_states = np.empty((size, 9))
         self.next_states = np.empty((size, 9))
-        self.rewards = np.empty(size)
-        self.actions = np.empty(size)
-        self.is_terminal_state = np.empty(size)
+        self.rewards = np.zeros(size)
+        self.actions = np.zeros(size)
+        self.is_terminal_state = np.zeros(size)
+        self.records_added = 0
 
     def add_record(self, record):
         def add_fifo(tape, value):
@@ -29,9 +31,11 @@ class Memory:
         self.rewards = add_fifo(self.rewards, record[2])
         self.next_states = add_fifo(self.next_states, record[3])
         self.is_terminal_state = add_fifo(self.is_terminal_state, record[4])
+        self.records_added += 1
 
     def sample_records(self, sample_size):
-        rand_index = np.random.randint(0, self.size, size=sample_size)
+        end = min(self.size, self.records_added)
+        rand_index = np.random.randint(0, end, size=sample_size)
         return [
             self.current_states[rand_index],
             self.actions[rand_index],
@@ -46,9 +50,8 @@ class QLearning:
     net = DQN()
     agent = QAgent(net)
 
-    def train(self, episodes=100):
-        steps_counter = 0
-        for i in range(episodes):
+    def train(self, episodes=1000):
+        for i in tqdm(range(episodes)):
             game = TicTacToe()      # new game
             while game.game_over == 0:
                 # execute action
@@ -59,8 +62,10 @@ class QLearning:
                 # store transition
                 state_data = [current_state, action, reward, next_state, is_game_over]
                 self.memory.add_record(state_data)
+
             # perform gradient decent
-            self.do_gradient_update(batch_size=32)
+            if i > 100:
+                self.do_gradient_update(batch_size=32)
         # end of training
         self.net.save('dqn_net')
 
@@ -71,7 +76,7 @@ class QLearning:
         rewards = mini_batch[2]
         next_states = mini_batch[3]
         is_terminal_state = mini_batch[4]
-
+        # gradient update
         self.net.model.train_on_batch(
             x=[current_states, actions],
             y=rewards       # todo fix y value

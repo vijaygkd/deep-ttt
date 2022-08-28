@@ -11,6 +11,7 @@ numpy = "*"
 jupyterlab = "*"
 seaborn = "*"
 mlflow = "*"
+tqdm = "*"
 
 [requires]
 python_version = "3.9"

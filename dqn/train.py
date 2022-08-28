@@ -46,9 +46,11 @@ class Memory:
 
 
 class QLearning:
-    memory = Memory(size=10000)
-    net = DQN()
-    agent = QAgent(net)
+    def __init__(self):
+        print("hey2")
+        self.memory = Memory(size=10000)
+        self.net = DQN()
+        self.agent = QAgent(self.net)
 
     def train(self, episodes=1000):
         for i in tqdm(range(episodes)):

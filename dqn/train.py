@@ -61,9 +61,11 @@ class QLearning:
         self.val_memory = self.generate_random_states(n=1000)
 
     def train(self, episodes=100):
+        total_rewards_per_game = []
+        observe_player = 1
         for i in tqdm(range(episodes)):
             game = TicTacToe()      # new game
-            rewards = []
+            total_game_reward = 0
             while game.game_over == 0:
                 # get next action from agent
                 current_state = game.get_current_state()
@@ -74,20 +76,24 @@ class QLearning:
                 # store transition
                 state_data = [current_state, action, reward, next_state, is_game_over]
                 self.memory.add_record(state_data)
-                rewards.append(reward)
+                if game.current_player == observe_player:
+                    total_game_reward += reward
 
+            # after game is complete
+            total_rewards_per_game.append(total_game_reward)
+            observe_player *= -1    # track alternate first and second player
             # perform gradient decent
             if i > 100:
                 self.do_gradient_update(batch_size=32)
-                if i % 10 == 0:
+                if i % 100 == 0:
                     # metrics 1: avg reward per episode
-                    mlflow.log_metric("avg_reward_per_episode", np.mean(rewards))
-                    rewards = []
+                    mlflow.log_metric("avg_reward_per_episode", np.mean(total_rewards_per_game))
+                    total_rewards_per_game = []
                     # metrics 2: avg_max_q value of fixed random states
                     self.calculate_validation_score()
 
         # end of training
-        self.net.save('dqn_net')
+        # self.net.save('dqn_net')
 
     def get_training_targets(self, rewards, next_states, is_terminal_state):
         """
@@ -122,7 +128,7 @@ class QLearning:
         val_records = self.val_memory.sample_records(sample_size=self.val_memory.size)
         current_states = val_records[0]
         actions = val_records[1]
-        outputs = self.net.model.predict([current_states, actions])
+        outputs = self.net.model.predict([current_states, actions], verbose=0)
         max_q_values = outputs[1]
         avg_max_q_value = np.mean(max_q_values)
         mlflow.log_metric("val_avg_max_q", avg_max_q_value)

@@ -12,12 +12,15 @@ class QOutputLayer(Layer):
 
     def call(self, inputs, indices, training=None):
         if training:
+            # return [action, Q value of selection positions / actions]
             indices = tf.cast(indices, tf.int32)
-            # return Q value of selection positions / actions
-            return tf.gather(inputs, indices, axis=1, batch_dims=1)
+            # return tf.gather(inputs, indices, axis=1, batch_dims=1)
+            return [indices, tf.gather(inputs, indices, axis=1, batch_dims=1)]
         else:
             # during inference, return argmax Q. ie. action with higher Q value
-            return tf.argmax(inputs, axis=1)
+            # return tf.argmax(inputs, axis=1)
+            # return [max action, Q value of max action]
+            return [tf.argmax(inputs, axis=1), tf.reduce_max(inputs, axis=1)]
 
 
 class DQN:
@@ -53,12 +56,6 @@ class DQN:
                 metrics.MeanSquaredError(),
             ])
         return model
-
-    # def predict(self, input):
-    #     input_reshaped = input.reshape(1, len(input))
-    #     q_estimates = self.model.predict(input_reshaped)
-    #     position = np.argmax(q_estimates)
-    #     return position, q_estimates
 
     def save(self, path):
         self.model.save(path)

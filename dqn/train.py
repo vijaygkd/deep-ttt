@@ -47,7 +47,7 @@ class Memory:
 
 class QLearning:
     def __init__(self):
-        print("hey2")
+        print("hey3")
         self.memory = Memory(size=10000)
         self.net = DQN()
         self.agent = QAgent(self.net)
@@ -66,8 +66,8 @@ class QLearning:
                 self.memory.add_record(state_data)
 
             # perform gradient decent
-            if i > 100:
-                self.do_gradient_update(batch_size=32)
+            # if i > 100:
+                # self.do_gradient_update(batch_size=32)
         # end of training
         self.net.save('dqn_net')
 
@@ -78,10 +78,15 @@ class QLearning:
         rewards = mini_batch[2]
         next_states = mini_batch[3]
         is_terminal_state = mini_batch[4]
+
+        print(current_states)
+        print(actions)
+        print(rewards)
+
         # gradient update
         self.net.model.train_on_batch(
             x=[current_states, actions],
-            y=rewards       # todo fix y value
+            y=[actions, rewards]       # todo fix y value
         )
 
     @staticmethod

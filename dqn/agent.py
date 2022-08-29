@@ -22,7 +22,9 @@ class QAgent:
         else:
             dummy = np.array([-1])
             input_board = board.reshape(1, len(board))
-            move = self.q_estimator.model.predict([input_board, dummy], verbose=0)
+            output = self.q_estimator.model.predict([input_board, dummy], verbose=0)
+            move = output[0]
+            q_value = output[1]
         self.after_move()
         return move, policy
 

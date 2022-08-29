@@ -3,6 +3,7 @@ Train DQN network for learning TTT by using re-inforcement learning
 """
 import numpy as np
 from tqdm import tqdm
+import mlflow
 
 from dqn.environment import TicTacToe
 from dqn.agent import RandomAgent, QAgent
@@ -47,14 +48,22 @@ class Memory:
 class QLearning:
     def __init__(self, gamma=0.1):
         print("hey4")
+        # mlflow init
+        mlflow.tensorflow.autolog()
+        mlflow.set_experiment(experiment_id='1')
+        # init training entities
         self.memory = Memory(size=10000)
         self.net = DQN()
         self.agent = QAgent(self.net)
         self.gamma = gamma      # Q update rate
+        # validation data
+        # generate game state data using random agent policy
+        self.val_memory = self.generate_random_states(n=1000)
 
     def train(self, episodes=100):
         for i in tqdm(range(episodes)):
             game = TicTacToe()      # new game
+            rewards = []
             while game.game_over == 0:
                 # get next action from agent
                 current_state = game.get_current_state()
@@ -65,10 +74,18 @@ class QLearning:
                 # store transition
                 state_data = [current_state, action, reward, next_state, is_game_over]
                 self.memory.add_record(state_data)
+                rewards.append(reward)
 
             # perform gradient decent
             if i > 100:
                 self.do_gradient_update(batch_size=32)
+                if i % 10 == 0:
+                    # metrics 1: avg reward per episode
+                    mlflow.log_metric("avg_reward_per_episode", np.mean(rewards))
+                    rewards = []
+                    # metrics 2: avg_max_q value of fixed random states
+                    self.calculate_validation_score()
+
         # end of training
         self.net.save('dqn_net')
 
@@ -96,21 +113,33 @@ class QLearning:
         self.net.model.train_on_batch(
             # during training model predicts max Q values for given actions
             x=[current_states, actions],
-            y=[actions, targets]
+            y=[actions, targets],
+            # epochs=1,
+            # verbose=0
         )
+
+    def calculate_validation_score(self):
+        val_records = self.val_memory.sample_records(sample_size=self.val_memory.size)
+        current_states = val_records[0]
+        actions = val_records[1]
+        outputs = self.net.model.predict([current_states, actions])
+        max_q_values = outputs[1]
+        avg_max_q_value = np.mean(max_q_values)
+        mlflow.log_metric("val_avg_max_q", avg_max_q_value)
+
 
     @staticmethod
     def generate_random_states(n):
         """
         Generate random state data for validation by using random action policy
         """
-        D = []
-        while len(D) < n:
+        val_memory = Memory(size=n)
+        while val_memory.records_added < n:
             t = TicTacToe()
             while t.game_over == 0:
                 current_state = t.get_current_state()
-                choice = RandomAgent.play_next_move(current_state)
-                reward, game_over = t.execute_action(choice)
+                action = RandomAgent.play_next_move(current_state)
+                reward, game_over = t.execute_action(action)
                 # TODO : next state for Q training ??
                 # option 1: next state is the board state after executing agent's move.
                 # Drawback is Q doesn't know what the opponent will play.
@@ -118,7 +147,9 @@ class QLearning:
                 # option 2. the next state for the Q should be state after the opponent has played.
                 # more intuitive, if we think of the opponent as part of the environment
                 next_state = t.get_current_state()
-                d = (current_state, choice, next_state, game_over)
-                D.append(d)
+                is_game_over = t.game_over
 
-        return D
+                state_data = [current_state, action, reward, next_state, is_game_over]
+                val_memory.add_record(state_data)
+
+        return val_memory

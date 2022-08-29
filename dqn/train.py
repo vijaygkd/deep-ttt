@@ -47,7 +47,7 @@ class Memory:
 
 class QLearning:
     def __init__(self, gamma=0.1):
-        print("hey4")
+        print("hey6")
         # mlflow init
         mlflow.tensorflow.autolog()
         mlflow.set_experiment(experiment_id='1')
@@ -87,7 +87,7 @@ class QLearning:
                 # the next state for the Q should be state after the opponent has played.
                 # more intuitive, if we think of the opponent as part of the environment
                 if transaction[4] == 0:             # if game is not over
-                    next_state = transaction[k+1][3].copy()  # next state is the game state after the opponent has made their move
+                    next_state = game_transactions[k+1][3].copy()  # next state from the opponent's move
                 else:
                     next_state = np.full(9, -1)     # invalid data as it's never used for training
                 transaction[3] = next_state
@@ -168,7 +168,7 @@ class QLearning:
             # assign next states and save transactions to memory
             for k, transaction in enumerate(game_transactions):
                 if transaction[4] == 0:  # if game is not over
-                    next_state = transaction[k + 1][3].copy()  # next state is the game state after the opponent has made their move
+                    next_state = game_transactions[k+1][3].copy()  # next state from opponent's move
                 else:
                     next_state = np.full(9, -1)  # invalid data as it's never used for training
                 transaction[3] = next_state

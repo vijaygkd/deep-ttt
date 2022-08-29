@@ -12,14 +12,11 @@ class QOutputLayer(Layer):
 
     def call(self, inputs, indices, training=None):
         if training:
-            # return [action, Q value of selection positions / actions]
+            # during training, return selected actions & predicted max Q values for given actions
             indices = tf.cast(indices, tf.int32)
-            # output = tf.gather(inputs, indices, axis=1, batch_dims=1)
             output = [indices, tf.gather(inputs, indices, axis=1, batch_dims=1)]
         else:
-            # during inference, return argmax Q. ie. action with higher Q value
-            # output = tf.argmax(inputs, axis=1)
-            # return [max action, Q value of max action]
+            # during inference, return action with max Q & the associated Q values.
             output = [tf.argmax(inputs, axis=1), tf.reduce_max(inputs, axis=1)]
         return output
 

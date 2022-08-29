@@ -1,7 +1,6 @@
 """
 Train DQN network for learning TTT by using re-inforcement learning
 """
-import random
 import numpy as np
 from tqdm import tqdm
 
@@ -46,19 +45,21 @@ class Memory:
 
 
 class QLearning:
-    def __init__(self):
-        print("hey3")
+    def __init__(self, gamma=0.1):
+        print("hey4")
         self.memory = Memory(size=10000)
         self.net = DQN()
         self.agent = QAgent(self.net)
+        self.gamma = gamma      # Q update rate
 
-    def train(self, episodes=1000):
+    def train(self, episodes=100):
         for i in tqdm(range(episodes)):
             game = TicTacToe()      # new game
             while game.game_over == 0:
-                # execute action
+                # get next action from agent
                 current_state = game.get_current_state()
                 action, _ = self.agent.play_next_move(current_state)
+                # execute action in environment
                 reward, is_game_over = game.execute_action(action)
                 next_state = game.get_current_state()
                 # store transition
@@ -66,10 +67,22 @@ class QLearning:
                 self.memory.add_record(state_data)
 
             # perform gradient decent
-            # if i > 100:
-                # self.do_gradient_update(batch_size=32)
+            if i > 100:
+                self.do_gradient_update(batch_size=32)
         # end of training
         self.net.save('dqn_net')
+
+    def get_training_targets(self, rewards, next_states, is_terminal_state):
+        """
+        target = reward                                 --> when next state is terminal
+        target = reward + gamma * max Q (next start)    --> when next state is non-terminal
+        """
+        output = self.net.model.predict([next_states, np.zeros_like(is_terminal_state)], verbose=0)
+        next_max_actions = output[0]
+        next_states_max_q = output[1]           # select output array containing max Q values
+        game_continue = 1 - is_terminal_state
+        targets = rewards + (self.gamma * next_states_max_q * game_continue)
+        return targets
 
     def do_gradient_update(self, batch_size):
         mini_batch = self.memory.sample_records(batch_size)
@@ -78,15 +91,12 @@ class QLearning:
         rewards = mini_batch[2]
         next_states = mini_batch[3]
         is_terminal_state = mini_batch[4]
-
-        print(current_states)
-        print(actions)
-        print(rewards)
-
+        targets = self.get_training_targets(rewards, next_states, is_terminal_state)
         # gradient update
         self.net.model.train_on_batch(
+            # during training model predicts max Q values for given actions
             x=[current_states, actions],
-            y=[actions, rewards]       # todo fix y value
+            y=[actions, targets]
         )
 
     @staticmethod

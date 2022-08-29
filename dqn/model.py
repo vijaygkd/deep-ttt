@@ -14,13 +14,14 @@ class QOutputLayer(Layer):
         if training:
             # return [action, Q value of selection positions / actions]
             indices = tf.cast(indices, tf.int32)
-            # return tf.gather(inputs, indices, axis=1, batch_dims=1)
-            return [indices, tf.gather(inputs, indices, axis=1, batch_dims=1)]
+            # output = tf.gather(inputs, indices, axis=1, batch_dims=1)
+            output = [indices, tf.gather(inputs, indices, axis=1, batch_dims=1)]
         else:
             # during inference, return argmax Q. ie. action with higher Q value
-            # return tf.argmax(inputs, axis=1)
+            # output = tf.argmax(inputs, axis=1)
             # return [max action, Q value of max action]
-            return [tf.argmax(inputs, axis=1), tf.reduce_max(inputs, axis=1)]
+            output = [tf.argmax(inputs, axis=1), tf.reduce_max(inputs, axis=1)]
+        return output
 
 
 class DQN:

@@ -63,9 +63,10 @@ class QLearning:
     def train(self, episodes=100):
         total_rewards_per_game = []
         observe_player = 1
-        for i in tqdm(range(episodes)):
+        for e in tqdm(range(episodes)):
             game = TicTacToe()      # new game
             total_game_reward = 0
+            game_transactions = []
             while game.game_over == 0:
                 # get next action from agent
                 current_state = game.get_current_state()
@@ -75,17 +76,29 @@ class QLearning:
                 next_state = game.get_current_state()
                 # store transition
                 state_data = [current_state, action, reward, next_state, is_game_over]
-                self.memory.add_record(state_data)
+                game_transactions.append(state_data)
+                # record metrics
                 if game.current_player == observe_player:
                     total_game_reward += reward
 
             # after game is complete
+            # assign next states and save transactions to memory
+            for k, transaction in enumerate(game_transactions):
+                # the next state for the Q should be state after the opponent has played.
+                # more intuitive, if we think of the opponent as part of the environment
+                if transaction[4] == 0:             # if game is not over
+                    next_state = transaction[k+1][3].copy()  # next state is the game state after the opponent has made their move
+                else:
+                    next_state = np.full(9, -1)     # invalid data as it's never used for training
+                transaction[3] = next_state
+                self.memory.add_record(transaction)
+
             total_rewards_per_game.append(total_game_reward)
             observe_player *= -1    # track alternate first and second player
             # perform gradient decent
-            if i > 100:
+            if e > 100:
                 self.do_gradient_update(batch_size=32)
-                if i % 100 == 0:
+                if e % 100 == 0:
                     # metrics 1: avg reward per episode
                     mlflow.log_metric("avg_reward_per_episode", np.mean(total_rewards_per_game))
                     total_rewards_per_game = []
@@ -120,8 +133,6 @@ class QLearning:
             # during training model predicts max Q values for given actions
             x=[current_states, actions],
             y=[actions, targets],
-            # epochs=1,
-            # verbose=0
         )
 
     def calculate_validation_score(self):
@@ -142,20 +153,25 @@ class QLearning:
         val_memory = Memory(size=n)
         while val_memory.records_added < n:
             t = TicTacToe()
+            game_transactions = []
             while t.game_over == 0:
                 current_state = t.get_current_state()
                 action = RandomAgent.play_next_move(current_state)
                 reward, game_over = t.execute_action(action)
-                # TODO : next state for Q training ??
-                # option 1: next state is the board state after executing agent's move.
-                # Drawback is Q doesn't know what the opponent will play.
-                # Next action can't be based on his own actions.
-                # option 2. the next state for the Q should be state after the opponent has played.
-                # more intuitive, if we think of the opponent as part of the environment
                 next_state = t.get_current_state()
                 is_game_over = t.game_over
 
                 state_data = [current_state, action, reward, next_state, is_game_over]
-                val_memory.add_record(state_data)
+                game_transactions.append(state_data)
+
+            # after game is over
+            # assign next states and save transactions to memory
+            for k, transaction in enumerate(game_transactions):
+                if transaction[4] == 0:  # if game is not over
+                    next_state = transaction[k + 1][3].copy()  # next state is the game state after the opponent has made their move
+                else:
+                    next_state = np.full(9, -1)  # invalid data as it's never used for training
+                transaction[3] = next_state
+                val_memory.add_record(transaction)
 
         return val_memory

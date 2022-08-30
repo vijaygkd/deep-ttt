@@ -197,7 +197,7 @@ def play_games_against_random(agent, no_of_games):
     random_agent = RandomAgent()
     players = [random_agent, agent]
     stats = {
-        'won': 0,
+        'win': 0,
         'lost': 0,
         'draw': 0,
     }
@@ -218,7 +218,9 @@ def play_games_against_random(agent, no_of_games):
         else:
             stats['lost'] += 1/no_of_games
 
-        return stats
+    for k, v in stats.items():
+        stats[k] = np.round(v, 2)
+    return stats
 
 
 

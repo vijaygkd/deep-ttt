@@ -12,7 +12,7 @@ INVALID = -5
 
 
 class TicTacToe:
-    winning_combo = [
+    board_tri_combos = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8],    # horizontal
         [0, 3, 6], [1, 4, 7], [2, 5, 8],    # vertical
         [0, 4, 8], [2, 4, 6]                # diagonal
@@ -37,12 +37,15 @@ class TicTacToe:
             self.game_over = 1
             return DRAW
 
-        for c in self.winning_combo:
+        for c in self.board_tri_combos:
+            # check if player was won
             if abs(self.board[c].sum()) == 3:
                 self.game_over = 1
                 return WIN
-            elif (0 in self.board[c]) and (self.board[c].sum() == 2 * self.current_player):
-                # opponent has a winning move in next turn
+
+        for c in self.board_tri_combos:
+            # check if opponent has a winning move in next turn
+            if (0 in self.board[c]) and (self.board[c].sum() == 2 * self.current_player):
                 self.game_over = 0
                 return LOSE
 

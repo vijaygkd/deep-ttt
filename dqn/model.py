@@ -23,7 +23,7 @@ class QOutputLayer(Layer):
 
 class DQN:
     def __init__(self, learning_rate=3e-4):
-        self.learning_rate = learning_rate
+        self.learning_rate = 0.001
         self.model = self.get_initial_model()
 
     def get_initial_model(self):

@@ -47,7 +47,7 @@ class Memory:
 
 class QLearning:
     def __init__(self, gamma=0.1):
-        print("hey6")
+        print("hey7")
         # mlflow init
         mlflow.tensorflow.autolog()
         mlflow.set_experiment(experiment_id='1')
@@ -55,7 +55,7 @@ class QLearning:
         self.memory = Memory(size=10000)
         self.net = DQN()
         self.agent = QAgent(self.net)
-        self.gamma = gamma      # Q update rate
+        self.gamma = 0.95      # Q wt of next state's reward
         # validation data
         # generate game state data using random agent policy
         self.val_memory = self.generate_random_states(n=1000)
@@ -128,12 +128,27 @@ class QLearning:
         next_states = mini_batch[3]
         is_terminal_state = mini_batch[4]
         targets = self.get_training_targets(rewards, next_states, is_terminal_state)
+
+        # outputs = self.net.model.predict(x=[current_states, actions])
+        #
+        # print(current_states)
+        # print(actions)
+        # print(rewards)
+        # print(targets)
+        # print(outputs)
+
         # gradient update
-        self.net.model.train_on_batch(
+        self.net.model.fit(
             # during training model predicts max Q values for given actions
             x=[current_states, actions],
             y=[actions, targets],
+            epochs=1,
+            batch_size=batch_size,
+            verbose=0
         )
+
+        # outputs = self.net.model.predict(x=[current_states, actions])
+        # print(outputs)
 
     def calculate_validation_score(self):
         val_records = self.val_memory.sample_records(sample_size=self.val_memory.size)

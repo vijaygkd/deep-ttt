@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 import mlflow
 
-from dqn.environment import TicTacToe
+from dqn.environment import *
 from dqn.agent import RandomAgent, QAgent
 from dqn.model import DQN
 
@@ -70,7 +70,7 @@ class QLearning:
             while game.game_over == 0:
                 # get next action from agent
                 current_state = game.get_current_state()
-                action, _ = self.agent.play_next_move(current_state)
+                action, _ = self.agent.play_epsilon_greedy_policy(current_state)
                 # execute action in environment
                 reward, is_game_over = game.execute_action(action)
                 next_state = game.get_current_state()
@@ -104,6 +104,9 @@ class QLearning:
                     total_rewards_per_game = []
                     # metrics 2: avg_max_q value of fixed random states
                     self.calculate_validation_score()
+                    # log other metrics
+                    mlflow.log_metric("step", e)
+                    # mlflow.log_metric("epsilon", self.agent.epsilon)
 
         # end of training
         # self.net.save('dqn_net')
@@ -142,7 +145,7 @@ class QLearning:
             # during training model predicts max Q values for given actions
             x=[current_states, actions],
             y=[actions, targets],
-            return_dict=True,
+            # return_dict=True,
         )
 
         # outputs = self.net.model.predict(x=[current_states, actions])
@@ -169,7 +172,7 @@ class QLearning:
             game_transactions = []
             while t.game_over == 0:
                 current_state = t.get_current_state()
-                action = RandomAgent.play_next_move(current_state)
+                action, _ = RandomAgent.play(current_state)
                 reward, game_over = t.execute_action(action)
                 next_state = t.get_current_state()
                 is_game_over = t.game_over
@@ -188,3 +191,34 @@ class QLearning:
                 val_memory.add_record(transaction)
 
         return val_memory
+
+
+def play_games_against_random(agent, no_of_games):
+    random_agent = RandomAgent()
+    players = [random_agent, agent]
+    stats = {
+        'won': 0,
+        'lost': 0,
+        'draw': 0,
+    }
+    for i in range(no_of_games):
+        g = TicTacToe()
+        c = i
+        while g.game_over == 0:
+            current_player = c % 2
+            c += 1
+            player = players[current_player]
+            move, _ = player.play(g.get_current_state())
+            reward, game_over = g.execute_action(move)
+
+        if reward == DRAW:
+            stats['draw'] += 1/no_of_games
+        elif reward == WIN and current_player == 1:
+            stats['win'] += 1/no_of_games
+        else:
+            stats['lost'] += 1/no_of_games
+
+        return stats
+
+
+

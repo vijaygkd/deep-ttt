@@ -46,7 +46,6 @@ class DQN:
         # Optimizer
         optimizer = optimizers.Adam(learning_rate=self.learning_rate)
 
-        # TODO - Define DQN loss and metrics
         model.compile(
             loss=losses.MeanSquaredError(),
             optimizer=optimizer,

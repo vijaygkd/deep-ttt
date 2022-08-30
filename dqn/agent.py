@@ -18,7 +18,7 @@ class QAgent:
         """
         policy = np.random.choice(['random', 'q_agent'], 1, p=[self.epsilon, 1-self.epsilon])[0]
         if policy == 'random':
-            move = RandomAgent.play(board)
+            move, _ = RandomAgent.play(board)
         else:
             move, q_value = self.play(board)
         self.after_move()
@@ -48,4 +48,4 @@ class RandomAgent:
     def play(board):
         a, = np.where(board == 0)
         choice = np.random.choice(a)
-        return choice
+        return choice, 0

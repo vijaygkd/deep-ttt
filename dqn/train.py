@@ -47,7 +47,7 @@ class Memory:
 
 class QLearning:
     def __init__(self, gamma=0.1):
-        print("hey7")
+        print("hey8")
         # mlflow init
         mlflow.tensorflow.autolog()
         mlflow.set_experiment(experiment_id='1')
@@ -138,13 +138,11 @@ class QLearning:
         # print(outputs)
 
         # gradient update
-        self.net.model.fit(
+        self.net.model.train_on_batch(
             # during training model predicts max Q values for given actions
             x=[current_states, actions],
             y=[actions, targets],
-            epochs=1,
-            batch_size=batch_size,
-            verbose=0
+            return_dict=True,
         )
 
         # outputs = self.net.model.predict(x=[current_states, actions])

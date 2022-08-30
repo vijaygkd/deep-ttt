@@ -20,13 +20,17 @@ class QAgent:
         if policy == 'random':
             move = RandomAgent.play_next_move(board)
         else:
-            dummy = np.array([-1])
-            input_board = board.reshape(1, len(board))
-            output = self.q_estimator.model.predict([input_board, dummy], verbose=0)
-            move = output[0]
-            q_value = output[1]
+            move, q_value = self.play(board)
         self.after_move()
         return move, policy
+
+    def play(self, board):
+        dummy = np.array([-1])
+        input_board = board.reshape(1, len(board))
+        output = self.q_estimator.model.predict([input_board, dummy], verbose=0)
+        move = output[0]
+        q_value = output[1]
+        return move, q_value
 
     def after_move(self):
         """

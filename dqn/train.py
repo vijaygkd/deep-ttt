@@ -104,9 +104,12 @@ class QLearning:
                     total_rewards_per_game = []
                     # metrics 2: avg_max_q value of fixed random states
                     self.calculate_validation_score()
+                    # metrics 3: games won against random
+                    stats = play_games_against_random(self.agent, 100)
+                    mlflow.log_metrics(stats)
                     # log other metrics
                     mlflow.log_metric("step", e)
-                    # mlflow.log_metric("epsilon", self.agent.epsilon)
+                    mlflow.log_metric("epsilon", self.agent.epsilon)
 
         # end of training
         # self.net.save('dqn_net')

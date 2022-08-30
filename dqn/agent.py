@@ -11,14 +11,14 @@ class QAgent:
         self.epsilon_min = epsilon_min
         self.epsilon_decay_rate = (epsilon - epsilon_min) / epsilon_decay_steps
 
-    def play_next_move(self, board):
+    def play_epsilon_greedy_policy(self, board):
         """
         Agent with epsilon greedy policy.
         Random move with probability epsilon else best move from Q estimator
         """
         policy = np.random.choice(['random', 'q_agent'], 1, p=[self.epsilon, 1-self.epsilon])[0]
         if policy == 'random':
-            move = RandomAgent.play_next_move(board)
+            move = RandomAgent.play(board)
         else:
             move, q_value = self.play(board)
         self.after_move()
@@ -45,7 +45,7 @@ class RandomAgent:
     Plays moves randomly with uniform distribution
     """
     @staticmethod
-    def play_next_move(board):
+    def play(board):
         a, = np.where(board == 0)
         choice = np.random.choice(a)
         return choice

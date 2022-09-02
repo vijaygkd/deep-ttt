@@ -55,7 +55,7 @@ class QLearning:
         self.memory = Memory(size=10000)
         self.net = DQN()
         self.agent = QAgent(self.net)
-        self.gamma = 0.95      # Q wt of next state's reward
+        self.gamma = 0.5      # Q wt of next state's reward
         # validation data
         # generate game state data using random agent policy
         self.val_memory = self.generate_random_states(n=1000)

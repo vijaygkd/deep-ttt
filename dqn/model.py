@@ -34,8 +34,8 @@ class DQN:
         input_states_layer = Input(shape=(9,), name='input_states')
         input_actions_layer = Input(shape=(1,), name='input_actions')
         # Hidden layers
-        hidden = Dense(64, activation='relu', name='hidden_1')(input_states_layer)
-        hidden = Dense(32, activation='relu', name='hidden_2')(hidden)
+        hidden = Dense(128, activation='relu', name='hidden_1')(input_states_layer)
+        hidden = Dense(64, activation='relu', name='hidden_2')(hidden)
         # Output layer - Q value for each action
         output_layer = Dense(9, activation='linear', name='output')(hidden)
         # Reduce output to single value

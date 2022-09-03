@@ -23,7 +23,7 @@ class QOutputLayer(Layer):
 
 class DQN:
     def __init__(self, learning_rate=3e-4):
-        self.learning_rate = learning_rate
+        self.learning_rate = 0.001
         self.model = self.get_initial_model()
 
     def get_initial_model(self):
@@ -32,21 +32,20 @@ class DQN:
         """
         # input layer - board state
         input_states_layer = Input(shape=(9,), name='input_states')
-        input_actions_layer = Input(shape=(1,), name='input_actions')
+        # input_actions_layer = Input(shape=(1,), name='input_actions')
         # Hidden layers
-        hidden = Dense(64, activation='relu', name='hidden_1')(input_states_layer)
-        hidden = Dense(32, activation='relu', name='hidden_2')(hidden)
+        hidden = Dense(128, activation='relu', name='hidden_1')(input_states_layer)
+        hidden = Dense(64, activation='relu', name='hidden_2')(hidden)
         # Output layer - Q value for each action
         output_layer = Dense(9, activation='linear', name='output')(hidden)
         # Reduce output to single value
-        final_layer = QOutputLayer(name='final_layer')(output_layer, input_actions_layer)
+        # final_layer = QOutputLayer(name='final_layer')(output_layer, input_actions_layer)
         # Model
-        model = Model(inputs=[input_states_layer, input_actions_layer], outputs=final_layer)
+        model = Model(inputs=input_states_layer, outputs=output_layer)
 
         # Optimizer
         optimizer = optimizers.Adam(learning_rate=self.learning_rate)
 
-        # TODO - Define DQN loss and metrics
         model.compile(
             loss=losses.MeanSquaredError(),
             optimizer=optimizer,

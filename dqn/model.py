@@ -39,9 +39,9 @@ class DQN:
         # Output layer - Q value for each action
         output_layer = Dense(9, activation='linear', name='output')(hidden)
         # Reduce output to single value
-        final_layer = QOutputLayer(name='final_layer')(output_layer, input_actions_layer)
+        # final_layer = QOutputLayer(name='final_layer')(output_layer, input_actions_layer)
         # Model
-        model = Model(inputs=[input_states_layer, input_actions_layer], outputs=final_layer)
+        model = Model(inputs=[input_states_layer, input_actions_layer], outputs=output_layer)
 
         # Optimizer
         optimizer = optimizers.Adam(learning_rate=self.learning_rate)

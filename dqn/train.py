@@ -47,7 +47,7 @@ class Memory:
 
 class QLearning:
     def __init__(self, gamma=0.1):
-        print("hey8")
+        print("hey11")
         # mlflow init
         mlflow.tensorflow.autolog()
         mlflow.set_experiment(experiment_id='1')
@@ -114,17 +114,38 @@ class QLearning:
         # end of training
         # self.net.save('dqn_net')
 
-    def get_training_targets(self, rewards, next_states, is_terminal_state):
+    def get_training_targets(self, current_states, actions, rewards, next_states, is_terminal_state):
         """
         target = reward                                 --> when next state is terminal
         target = reward + gamma * max Q (next start)    --> when next state is non-terminal
         """
+        base_targets = self.net.model.predict([current_states, actions], verbose=0)
+
+        # q learning - reward
         output = self.net.model.predict([next_states, np.zeros_like(is_terminal_state)], verbose=0)
-        next_max_actions = output[0]
-        next_states_max_q = output[1]           # select output array containing max Q values
+        # next_max_actions = np.argmax(output, axis=1)
+        next_states_max_q = np.max(output, axis=1)           # select output array containing max Q values
         game_continue = 1 - is_terminal_state
         targets = rewards + (self.gamma * next_states_max_q * game_continue)
-        return targets
+
+        # set new targets for corresponding actions
+        ix = list(range(len(actions)))
+        positions = actions.astype(int)
+        base_targets[ix, positions] = targets
+
+        return base_targets
+
+    # def get_training_targets(self, rewards, next_states, is_terminal_state):
+    #     """
+    #     target = reward                                 --> when next state is terminal
+    #     target = reward + gamma * max Q (next start)    --> when next state is non-terminal
+    #     """
+    #     output = self.net.model.predict([next_states, np.zeros_like(is_terminal_state)], verbose=0)
+    #     next_max_actions = output[0]
+    #     next_states_max_q = output[1]           # select output array containing max Q values
+    #     game_continue = 1 - is_terminal_state
+    #     targets = rewards + (self.gamma * next_states_max_q * game_continue)
+    #     return targets
 
     def do_gradient_update(self, batch_size):
         mini_batch = self.memory.sample_records(batch_size)
@@ -133,7 +154,7 @@ class QLearning:
         rewards = mini_batch[2]
         next_states = mini_batch[3]
         is_terminal_state = mini_batch[4]
-        targets = self.get_training_targets(rewards, next_states, is_terminal_state)
+        targets = self.get_training_targets(current_states, actions, rewards, next_states, is_terminal_state)
 
         # outputs = self.net.model.predict(x=[current_states, actions])
         #
@@ -147,8 +168,8 @@ class QLearning:
         self.net.model.train_on_batch(
             # during training model predicts max Q values for given actions
             x=[current_states, actions],
-            y=[actions, targets],
-            # return_dict=True,
+            # y=[actions, targets],
+            y=targets,
         )
 
         # outputs = self.net.model.predict(x=[current_states, actions])
@@ -159,7 +180,8 @@ class QLearning:
         current_states = val_records[0]
         actions = val_records[1]
         outputs = self.net.model.predict([current_states, actions], verbose=0)
-        max_q_values = outputs[1]
+        # max_q_values = outputs[1]
+        max_q_values = np.max(outputs, axis=1)
         avg_max_q_value = np.mean(max_q_values)
         mlflow.log_metric("val_avg_max_q", avg_max_q_value)
 

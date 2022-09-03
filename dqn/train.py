@@ -47,12 +47,12 @@ class Memory:
 
 class QLearning:
     def __init__(self, gamma=0.1):
-        print("hey11")
+        print("hey-12")
         # mlflow init
         mlflow.tensorflow.autolog()
         mlflow.set_experiment(experiment_id='1')
         # init training entities
-        self.memory = Memory(size=10000)
+        self.memory = Memory(size=50000)
         self.net = DQN()
         self.agent = QAgent(self.net)
         self.gamma = 0.5      # Q wt of next state's reward

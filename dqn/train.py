@@ -119,10 +119,10 @@ class QLearning:
         target = reward                                 --> when next state is terminal
         target = reward + gamma * max Q (next start)    --> when next state is non-terminal
         """
-        base_targets = self.net.model.predict([current_states, actions], verbose=0)
+        base_targets = self.net.model.predict(current_states, verbose=0)
 
         # q learning - reward
-        output = self.net.model.predict([next_states, np.zeros_like(is_terminal_state)], verbose=0)
+        output = self.net.model.predict(next_states, verbose=0)
         # next_max_actions = np.argmax(output, axis=1)
         next_states_max_q = np.max(output, axis=1)           # select output array containing max Q values
         game_continue = 1 - is_terminal_state
@@ -155,32 +155,18 @@ class QLearning:
         next_states = mini_batch[3]
         is_terminal_state = mini_batch[4]
         targets = self.get_training_targets(current_states, actions, rewards, next_states, is_terminal_state)
-
-        # outputs = self.net.model.predict(x=[current_states, actions])
-        #
-        # print(current_states)
-        # print(actions)
-        # print(rewards)
-        # print(targets)
-        # print(outputs)
-
         # gradient update
         self.net.model.train_on_batch(
             # during training model predicts max Q values for given actions
-            x=[current_states, actions],
-            # y=[actions, targets],
+            x=current_states,
             y=targets,
         )
-
-        # outputs = self.net.model.predict(x=[current_states, actions])
-        # print(outputs)
 
     def calculate_validation_score(self):
         val_records = self.val_memory.sample_records(sample_size=self.val_memory.size)
         current_states = val_records[0]
         actions = val_records[1]
-        outputs = self.net.model.predict([current_states, actions], verbose=0)
-        # max_q_values = outputs[1]
+        outputs = self.net.model.predict(current_states, verbose=0)
         max_q_values = np.max(outputs, axis=1)
         avg_max_q_value = np.mean(max_q_values)
         mlflow.log_metric("val_avg_max_q", avg_max_q_value)

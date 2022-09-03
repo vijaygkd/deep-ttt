@@ -32,7 +32,7 @@ class DQN:
         """
         # input layer - board state
         input_states_layer = Input(shape=(9,), name='input_states')
-        input_actions_layer = Input(shape=(1,), name='input_actions')
+        # input_actions_layer = Input(shape=(1,), name='input_actions')
         # Hidden layers
         hidden = Dense(128, activation='relu', name='hidden_1')(input_states_layer)
         hidden = Dense(64, activation='relu', name='hidden_2')(hidden)
@@ -41,7 +41,7 @@ class DQN:
         # Reduce output to single value
         # final_layer = QOutputLayer(name='final_layer')(output_layer, input_actions_layer)
         # Model
-        model = Model(inputs=[input_states_layer, input_actions_layer], outputs=output_layer)
+        model = Model(inputs=input_states_layer, outputs=output_layer)
 
         # Optimizer
         optimizer = optimizers.Adam(learning_rate=self.learning_rate)

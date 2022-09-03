@@ -33,9 +33,8 @@ class QAgent:
     #     return move, q_value
 
     def play(self, board):
-        dummy = np.array([-1])
         input_board = board.reshape(1, len(board))
-        output = self.q_estimator.model.predict([input_board, dummy], verbose=0)
+        output = self.q_estimator.model.predict(input_board, verbose=0)
         move = np.argmax(output)
         q_value = np.max(output)
         return move, q_value

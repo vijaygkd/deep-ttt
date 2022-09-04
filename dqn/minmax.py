@@ -320,7 +320,7 @@ def main():
 
 class MinMaxAgent:
     @staticmethod
-    def play(board, player):
+    def play(board):
         """
         It calls the minimax function if the depth < 9,
         else it choices a random coordinate.
@@ -332,6 +332,7 @@ class MinMaxAgent:
         state = state.reshape(3, 3)
         # minmax implementation maximizes for COMP player aka +1 player.
         # if board has -1 as current player, then flip the board states.
+        player = +1 if (state.sum() == 0) else -1
         state = state * player
 
         depth = len(empty_cells(state))

@@ -318,5 +318,35 @@ def main():
     exit()
 
 
+class MinMaxAgent:
+    @staticmethod
+    def play(board, player):
+        """
+        It calls the minimax function if the depth < 9,
+        else it choices a random coordinate.
+        :param board: game state
+        :return: postion on board to play
+        """
+        state = board.copy()
+        # reshape board to match author's implementation
+        state = state.reshape(3, 3)
+        # minmax implementation maximizes for COMP player aka +1 player.
+        # if board has -1 as current player, then flip the board states.
+        state = state * player
+
+        depth = len(empty_cells(state))
+        if depth == 0 or game_over(state):
+            return
+        if depth == 9:
+            x = choice([0, 1, 2])
+            y = choice([0, 1, 2])
+        else:
+            move = minimax(state, depth, COMP)
+            x, y = move[0], move[1]
+
+        action = x * 3 + y
+        return action, 0
+
+
 if __name__ == '__main__':
     main()

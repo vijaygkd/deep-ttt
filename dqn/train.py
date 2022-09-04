@@ -105,7 +105,7 @@ class QLearning:
                     # metrics 2: avg_max_q value of fixed random states
                     self.calculate_validation_score()
                     # metrics 3: games won against random
-                    stats = play_games_against_random(self.agent, 100)
+                    stats = play_games_against_other_agent(self.agent, RandomAgent(), 'random', 100)
                     mlflow.log_metrics(stats)
                     # log other metrics
                     mlflow.log_metric("step", e)
@@ -204,13 +204,12 @@ class QLearning:
         return val_memory
 
 
-def play_games_against_random(agent, no_of_games):
-    random_agent = RandomAgent()
-    players = [random_agent, agent]
+def play_games_against_other_agent(agent, other_agent, prefix, no_of_games):
+    players = [agent, other_agent]
     stats = {
-        'win': 0,
-        'lost': 0,
-        'draw': 0,
+        f'{prefix}_win': 0,
+        f'{prefix}_lost': 0,
+        f'{prefix}_draw': 0,
     }
     for i in range(no_of_games):
         g = TicTacToe()
@@ -223,15 +222,13 @@ def play_games_against_random(agent, no_of_games):
             reward, game_over = g.execute_action(move)
 
         if reward == DRAW:
-            stats['draw'] += 1/no_of_games
-        elif reward == WIN and current_player == 1:
-            stats['win'] += 1/no_of_games
+            stats[f'{prefix}_draw'] += 1/no_of_games
+        elif reward == WIN and current_player == 0:
+            stats[f'{prefix}_win'] += 1/no_of_games
         else:
-            stats['lost'] += 1/no_of_games
+            stats[f'{prefix}_lost'] += 1/no_of_games
 
     for k, v in stats.items():
         stats[k] = np.round(v, 2)
     return stats
-
-
 

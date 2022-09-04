@@ -48,7 +48,7 @@ class Memory:
 
 class QLearning:
     def __init__(self, gamma=0.1):
-        print("hey-12")
+        print("hey-14")
         # mlflow init
         mlflow.tensorflow.autolog()
         mlflow.set_experiment(experiment_id='1')
@@ -293,3 +293,9 @@ def play_games_against_other_agent(agent, other_agent, prefix, no_of_games):
         stats[k] = np.round(v, 2)
     return stats
 
+
+if __name__ == "__main__":
+    q = QLearning()
+    q.net.model.summary()
+    with mlflow.start_run(run_name='run 14 - train with minmax', description='') as run:
+        q.train(15000)

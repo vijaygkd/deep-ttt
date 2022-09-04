@@ -8,6 +8,7 @@ import mlflow
 from dqn.environment import *
 from dqn.agent import RandomAgent, QAgent
 from dqn.model import DQN
+from dqn.minmax import MinMaxAgent
 
 
 class Memory:
@@ -106,6 +107,9 @@ class QLearning:
                     self.calculate_validation_score()
                     # metrics 3: games won against random
                     stats = play_games_against_other_agent(self.agent, RandomAgent(), 'random', 100)
+                    mlflow.log_metrics(stats)
+                    # metrics 4: games won against minmax
+                    stats = play_games_against_other_agent(self.agent, MinMaxAgent(), 'minmax', 100)
                     mlflow.log_metrics(stats)
                     # log other metrics
                     mlflow.log_metric("step", e)

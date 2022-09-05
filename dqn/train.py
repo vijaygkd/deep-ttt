@@ -8,6 +8,7 @@ import mlflow
 from dqn.environment import *
 from dqn.agent import RandomAgent, QAgent
 from dqn.model import DQN
+from dqn.minmax import MinMaxAgent
 
 
 class Memory:
@@ -47,7 +48,7 @@ class Memory:
 
 class QLearning:
     def __init__(self, gamma=0.1):
-        print("hey-12")
+        print("hey-14")
         # mlflow init
         mlflow.tensorflow.autolog()
         mlflow.set_experiment(experiment_id='1')
@@ -105,7 +106,10 @@ class QLearning:
                     # metrics 2: avg_max_q value of fixed random states
                     self.calculate_validation_score()
                     # metrics 3: games won against random
-                    stats = play_games_against_random(self.agent, 100)
+                    stats = play_games_against_other_agent(self.agent, RandomAgent(), 'random', 100)
+                    mlflow.log_metrics(stats)
+                    # metrics 4: games won against minmax
+                    stats = play_games_against_other_agent(self.agent, MinMaxAgent(), 'minmax', 100)
                     mlflow.log_metrics(stats)
                     # log other metrics
                     mlflow.log_metric("step", e)
@@ -113,6 +117,63 @@ class QLearning:
 
         # end of training
         # self.net.save('dqn_net')
+
+    def train_with_minmax(self, episodes=100):
+        total_rewards_per_game = []
+        for e in tqdm(range(episodes)):
+            game = TicTacToe()      # new game
+            total_game_reward = 0
+            game_transactions = []
+            c = e % 2
+            while game.game_over == 0:
+                # get next action from agent
+                current_state = game.get_current_state()
+                if c % 2 == 0:
+                    action, _ = self.agent.play_epsilon_greedy_policy(current_state)
+                else:
+                    action, _ = MinMaxAgent.play(current_state)
+                # execute action in environment
+                reward, is_game_over = game.execute_action(action)
+                next_state = game.get_current_state()
+                # store transition
+                state_data = [current_state, action, reward, next_state, is_game_over]
+                game_transactions.append(state_data)
+                # record metrics
+                if c % 2 == 0:
+                    total_game_reward += reward
+                c += 1
+
+            # after game is complete
+            # assign next states and save transactions to memory
+            for k, transaction in enumerate(game_transactions):
+                # the next state for the Q should be state after the opponent has played.
+                # more intuitive, if we think of the opponent as part of the environment
+                if transaction[4] == 0:             # if game is not over
+                    next_state = game_transactions[k+1][3].copy()  # next state from the opponent's move
+                else:
+                    next_state = np.full(9, -1)     # invalid data as it's never used for training
+                transaction[3] = next_state
+                self.memory.add_record(transaction)
+
+            total_rewards_per_game.append(total_game_reward)
+            # perform gradient decent
+            if e > 100:
+                self.do_gradient_update(batch_size=32)
+                if e % 100 == 0:
+                    # metrics 1: avg reward per episode
+                    mlflow.log_metric("avg_reward_per_episode", np.mean(total_rewards_per_game))
+                    total_rewards_per_game = []
+                    # metrics 2: avg_max_q value of fixed random states
+                    self.calculate_validation_score()
+                    # metrics 3: games won against random
+                    stats = play_games_against_other_agent(self.agent, RandomAgent(), 'random', 100)
+                    mlflow.log_metrics(stats)
+                    # metrics 4: games won against minmax
+                    stats = play_games_against_other_agent(self.agent, MinMaxAgent(), 'minmax', 40)
+                    mlflow.log_metrics(stats)
+                    # log other metrics
+                    mlflow.log_metric("step", e)
+                    mlflow.log_metric("epsilon", self.agent.epsilon)
 
     def get_training_targets(self, current_states, actions, rewards, next_states, is_terminal_state):
         """
@@ -204,13 +265,12 @@ class QLearning:
         return val_memory
 
 
-def play_games_against_random(agent, no_of_games):
-    random_agent = RandomAgent()
-    players = [random_agent, agent]
+def play_games_against_other_agent(agent, other_agent, prefix, no_of_games):
+    players = [agent, other_agent]
     stats = {
-        'win': 0,
-        'lost': 0,
-        'draw': 0,
+        f'{prefix}_win': 0,
+        f'{prefix}_lost': 0,
+        f'{prefix}_draw': 0,
     }
     for i in range(no_of_games):
         g = TicTacToe()
@@ -223,15 +283,19 @@ def play_games_against_random(agent, no_of_games):
             reward, game_over = g.execute_action(move)
 
         if reward == DRAW:
-            stats['draw'] += 1/no_of_games
-        elif reward == WIN and current_player == 1:
-            stats['win'] += 1/no_of_games
+            stats[f'{prefix}_draw'] += 1/no_of_games
+        elif reward == WIN and current_player == 0:
+            stats[f'{prefix}_win'] += 1/no_of_games
         else:
-            stats['lost'] += 1/no_of_games
+            stats[f'{prefix}_lost'] += 1/no_of_games
 
     for k, v in stats.items():
         stats[k] = np.round(v, 2)
     return stats
 
 
-
+if __name__ == "__main__":
+    q = QLearning()
+    q.net.model.summary()
+    with mlflow.start_run(run_name='run 14 - train with minmax', description='') as run:
+        q.train(15000)

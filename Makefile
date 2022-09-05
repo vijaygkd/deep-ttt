@@ -6,4 +6,4 @@ jupyter:
 	pipenv run jupyter lab
 
 train:
-	pipen run python dqn/train.py
+	pipenv run python dqn/train.py
